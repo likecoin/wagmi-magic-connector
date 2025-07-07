@@ -1,11 +1,11 @@
 {
-  "name": "@magiclabs/wagmi-connector",
-  "version": "2.3.2",
+  "name": "@likecoin/wagmi-connector",
+  "version": "2.3.2-like.3",
   "description": "wagmi connector to connect with Magic SDK",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
-  "repository": "https://github.com/magiclabs/wagmi-magic-connector",
+  "repository": "https://github.com/likecoin/wagmi-magic-connector",
   "license": "MIT",
   "keywords": [
     "wagmi",
