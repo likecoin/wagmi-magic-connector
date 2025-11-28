@@ -23,7 +23,6 @@
   },
   "dependencies": {
     "@magic-ext/oauth2": "^11.4.1",
-    "@wagmi/connectors": "^5.0.6",
     "@wagmi/core": "^2.10.4",
     "magic-sdk": "29.4.2"
   },
