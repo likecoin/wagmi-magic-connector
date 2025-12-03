@@ -23,7 +23,6 @@
   },
   "dependencies": {
     "@magic-ext/oauth2": "^11.4.1",
-    "@wagmi/core": "^2.10.4",
     "magic-sdk": "29.4.2"
   },
   "devDependencies": {
@@ -45,6 +44,7 @@
     "viem": "2.x"
   },
   "peerDependencies": {
+    "@wagmi/core": "^2.10.4 | ^3.0.0",
     "viem": "2.x"
   },
   "files": [
