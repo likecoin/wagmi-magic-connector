@@ -1,6 +1,4 @@
-import { OAuthExtension } from '@magic-ext/oauth2';
-
-import { type EthNetworkConfiguration, Magic } from 'magic-sdk';
+import { type EthNetworkConfiguration, type Magic } from 'magic-sdk';
 import { type Chain, createWalletClient, custom, getAddress } from 'viem';
 
 export const IS_SERVER = typeof window === 'undefined';
@@ -36,15 +34,26 @@ export function magicConnector({ chains = [], options }: MagicConnectorParams) {
     throw new Error('Magic API Key is required. Get one at https://dashboard.magic.link/');
   }
 
-  const getMagicSDK = (): any => {
-    return new Magic(options.apiKey, {
+  let magicInstance: Magic | null = null;
+
+  const getMagicSDK = async (): Promise<Magic> => {
+    if (magicInstance) return magicInstance;
+
+    const [{ Magic: MagicConstructor }, { OAuthExtension }] = await Promise.all([
+      import('magic-sdk'),
+      import('@magic-ext/oauth2'),
+    ]);
+
+    magicInstance = new MagicConstructor(options.apiKey, {
       ...options.magicSdkConfiguration,
       extensions: [new OAuthExtension()],
     });
+
+    return magicInstance;
   };
 
   const getProvider = async () => {
-    const magic = getMagicSDK();
+    const magic = await getMagicSDK();
     if (!magic) return null;
     return magic.rpcProvider;
   };
