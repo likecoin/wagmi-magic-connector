@@ -40,10 +40,10 @@ This is a fork of `@magiclabs/wagmi-connector` with the following changes:
 Requires WAGMI v2 and viem v2.
 
 ```sh
-npm install @likecoin/wagmi-magic-connector
+npm install @likecoin/wagmi-connector
 ```
 
-> **Note:** `@likecoin/wagmi-connector` is maintained separately in the [`likecoin`](https://github.com/likecoin/wagmi-magic-connector/tree/likecoin) branch for internal use.
+> **Note:** This package (`@likecoin/wagmi-connector`) is maintained in the [`likecoin`](https://github.com/likecoin/wagmi-magic-connector/tree/likecoin) branch for internal use. The public fork is published as `@likecoin/wagmi-magic-connector` from the `main` branch.
 
 # 🔎 Package TL;DR
 
@@ -52,7 +52,7 @@ This package provides `dedicatedWalletConnector`, a [WAGMI](https://wagmi.sh/) c
 # ⭐ Usage
 
 ```javascript
-import { dedicatedWalletConnector } from '@likecoin/wagmi-magic-connector';
+import { dedicatedWalletConnector } from '@likecoin/wagmi-connector';
 
 const connector = dedicatedWalletConnector({
   chains,
@@ -181,7 +181,7 @@ const connector = dedicatedWalletConnector({
 You can customize the modal's theme, default accent color, logo and header text.
 
 ```javascript
-import { dedicatedWalletConnector } from '@likecoin/wagmi-magic-connector';
+import { dedicatedWalletConnector } from '@likecoin/wagmi-connector';
 
 const connector = dedicatedWalletConnector({
   options: {
@@ -207,7 +207,7 @@ To use the connector with Rainbow kit, create a new file `RainbowMagicConnector.
 ```javascript
 // RainbowMagicConnector.ts
 
-import { dedicatedWalletConnector } from '@likecoin/wagmi-magic-connector'
+import { dedicatedWalletConnector } from '@likecoin/wagmi-connector'
 import { Wallet, WalletDetailsParams } from '@rainbow-me/rainbowkit'
 import { CreateWalletFn } from '@rainbow-me/rainbowkit/dist/wallets/Wallet'
 import { Chain } from 'wagmi/chains'

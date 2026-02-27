@@ -1,6 +1,6 @@
-# @likecoin/wagmi-magic-connector
+# @likecoin/wagmi-connector
 
-## 2.4.0
+## 2.4.0-like.0
 
 ### Minor Changes
 
@@ -9,10 +9,40 @@
 - Rewrite `switchChain()` to use EVMExtension instead of re-instantiating the entire Magic SDK
 - Update `publicAddress` access to `wallets.ethereum.publicAddress` (Magic SDK v31 breaking change)
 - Add `customLoginText` option to customize modal login button text
-- Lazy-load `magic-sdk`, `@magic-ext/oauth2`, and `@magic-ext/evm` for smaller initial bundle
+
+## 2.3.2-like.4.0
+
+### Patch Changes
+
+- Allow using custom modal via `isCustomModal` option
+
+## 2.3.2-like.3
+
+### Patch Changes
+
+- Merge upstream `main` into `likecoin` branch
+
+## 2.3.2-like.1
+
+### Patch Changes
+
+- Lazy-load `magic-sdk` for smaller initial bundle
 - Move `@wagmi/core` to peer dependencies
+
+## 2.3.2-like
+
+### Patch Changes
+
 - Remove unused dependencies
-- Publish as `@likecoin/wagmi-magic-connector` fork
+- Don't fetch OAuth redirect result if no providers are set
+- Publish as `@likecoin/wagmi-connector` fork
+
+## 2.2.4-like
+
+### Patch Changes
+
+- Don't fetch OAuth redirect result if no providers are set
+- Publish as `@likecoin/wagmi-connector` fork (based on upstream 2.2.4)
 
 ## 2.3.0
 
