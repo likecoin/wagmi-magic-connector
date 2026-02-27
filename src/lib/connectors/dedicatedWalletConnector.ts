@@ -1,4 +1,5 @@
 import type { OAuthProvider } from '@magic-ext/oauth2';
+import type { Magic } from 'magic-sdk';
 import { createConnector } from '@wagmi/core';
 import { type Address, UserRejectedRequestError, getAddress } from 'viem';
 import { createModal } from '../modal/view';
@@ -50,8 +51,6 @@ export function dedicatedWalletConnector({ chains, options }: DedicatedWalletCon
     options: { ...options, connectorType: 'dedicated' },
   });
 
-  const magic = getMagicSDK();
-
   const registerProviderEventListeners = (
     provider: any,
     onChainChanged: (chain: string) => void,
@@ -97,7 +96,13 @@ export function dedicatedWalletConnector({ chains, options }: DedicatedWalletCon
     id,
     type,
     name,
-    magic,
+    magic: undefined as Magic | undefined,
+    async getMagic(): Promise<Magic> {
+      if (!this.magic) {
+        this.magic = await getMagicSDK();
+      }
+      return this.magic;
+    },
     getProvider,
     getAccount,
     onAccountsChanged,
@@ -130,12 +135,11 @@ export function dedicatedWalletConnector({ chains, options }: DedicatedWalletCon
 
       if (!isModalOpen) {
         const modalOutput = await getUserDetailsByForm(enableSMSLogin, enableEmailLogin, oauthProviders);
-
-        const magic = getMagicSDK();
+        const magic = await this.getMagic();
 
         // LOGIN WITH MAGIC USING OAUTH PROVIDER
         if (modalOutput.oauthProvider)
-          await magic.oauth2.loginWithRedirect({
+          await (magic as any).oauth2.loginWithRedirect({
             provider: modalOutput.oauthProvider,
             redirectURI: oauthCallbackUrl && !IS_SERVER ? window.location.href : '',
           });
@@ -163,7 +167,7 @@ export function dedicatedWalletConnector({ chains, options }: DedicatedWalletCon
 
     async disconnect() {
       try {
-        const magic = getMagicSDK();
+        const magic = await this.getMagic();
         await magic?.user.logout();
         localStorage.removeItem('magicRedirectResult');
         config.emitter.emit('disconnect');
@@ -247,7 +251,7 @@ export function dedicatedWalletConnector({ chains, options }: DedicatedWalletCon
       });
 
       this.getAccount = getAccount;
-      this.magic = getMagicSDK();
+      this.magic = await getMagicSDK();
       this.getProvider = getProvider;
       this.onAccountsChanged = onAccountsChanged;
 
@@ -261,19 +265,14 @@ export function dedicatedWalletConnector({ chains, options }: DedicatedWalletCon
       return chain;
     },
 
-    isAuthorized: async () => {
+    async isAuthorized() {
       try {
-        const magic = getMagicSDK();
-
-        if (!magic) {
-          return false;
-        }
-
+        const magic: Magic = await this.getMagic();
         const isLoggedIn = await magic.user.isLoggedIn();
         if (isLoggedIn) return true;
 
         if (oauthProviders?.length > 0) {
-          const result = await magic.oauth2.getRedirectResult();
+          const result = await (magic as any).oauth2.getRedirectResult();
           if (result) {
             localStorage.setItem('magicRedirectResult', JSON.stringify(result));
           }
