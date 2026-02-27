@@ -1,7 +1,7 @@
 import type { OAuthProvider } from '@magic-ext/oauth2';
 import type { Magic } from 'magic-sdk';
 import { createConnector } from '@wagmi/core';
-import { type Address, UserRejectedRequestError, getAddress } from 'viem';
+import { UserRejectedRequestError, getAddress } from 'viem';
 import { createModal } from '../modal/view';
 import { normalizeChainId } from '../utils';
 import { IS_SERVER, type MagicConnectorParams, type MagicOptions, magicConnector } from './magicConnector';
@@ -51,18 +51,6 @@ export function dedicatedWalletConnector({ chains, options }: DedicatedWalletCon
     options: { ...options, connectorType: 'dedicated' },
   });
 
-  const registerProviderEventListeners = (
-    provider: any,
-    onChainChanged: (chain: string) => void,
-    onDisconnect: () => void,
-  ) => {
-    if (provider.on) {
-      provider.on('accountsChanged', onAccountsChanged);
-      provider.on('chainChanged', (chain: string) => onChainChanged(chain));
-      provider.on('disconnect', onDisconnect);
-    }
-  };
-
   const oauthProviders = options.oauthOptions?.providers ?? [];
   const oauthCallbackUrl = options.oauthOptions?.callbackUrl;
   const enableSMSLogin = options.enableSMSLogin ?? false;
@@ -84,6 +72,7 @@ export function dedicatedWalletConnector({ chains, options }: DedicatedWalletCon
       isCustomModal: options.isCustomModal,
       customLogo: options.customLogo,
       customHeaderText: options.customHeaderText,
+      customLoginText: options.customLoginText,
       enableSMSLogin: enableSMSLogin,
       enableEmailLogin: enableEmailLogin,
       oauthProviders,
@@ -209,60 +198,17 @@ export function dedicatedWalletConnector({ chains, options }: DedicatedWalletCon
         throw new Error(`Unsupported chainId: ${chainId}`);
       }
 
-      const network = options.networks.find(x => {
-        if (typeof x === 'object' && x.chainId) {
-          return normalizeChainId(x.chainId) === normalizedChainId;
-        }
+      const magic = await this.getMagic();
+      await (magic as any).evm.switchChain(normalizedChainId);
 
-        if (typeof x === 'string') {
-          const networkMap: Record<string, number> = {
-            mainnet: 1,
-            sepolia: 11155111,
-            goerli: 5,
-          };
+      const metadata = await magic.user.getInfo();
+      const account = metadata?.wallets?.ethereum?.publicAddress;
+      if (!account) throw new Error('Failed to get account after chain switch');
 
-          const networkId = networkMap[x.toLowerCase()] ?? null;
-
-          return networkId !== null && normalizeChainId(networkId) === normalizedChainId;
-        }
-
-        return normalizeChainId(x as unknown as bigint | number | string) === normalizedChainId;
-      });
-
-      const provider = (await this.getProvider()) as any;
-
-      if (provider?.off) {
-        provider.off('accountsChanged', this.onAccountsChanged);
-        provider.off('chainChanged', this.onChainChanged);
-        provider.off('disconnect', this.onDisconnect);
-      }
-
-      const newOptions: MagicOptions = {
-        ...options,
-        connectorType: 'dedicated',
-        magicSdkConfiguration: {
-          ...options.magicSdkConfiguration,
-          network,
-        },
-      };
-
-      const { getAccount, getMagicSDK, getProvider, onAccountsChanged } = magicConnector({
-        chains,
-        options: newOptions,
-      });
-
-      this.getAccount = getAccount;
-      this.magic = await getMagicSDK();
-      this.getProvider = getProvider;
-      this.onAccountsChanged = onAccountsChanged;
-
-      const metadata = await this.magic?.user.getInfo();
-      const account = metadata?.publicAddress as Address;
-
-      registerProviderEventListeners(this.magic!.rpcProvider, this.onChainChanged, this.onDisconnect);
+      const address = getAddress(account);
       this.onChainChanged(chain.id.toString());
-      config.emitter.emit('change', { accounts: [account] });
-      this.onAccountsChanged([account]);
+      config.emitter.emit('change', { accounts: [address] });
+      this.onAccountsChanged([address]);
       return chain;
     },
 

@@ -1,6 +1,6 @@
 {
-  "name": "@likecoin/wagmi-connector",
-  "version": "2.3.2-like.4.0",
+  "name": "@likecoin/wagmi-magic-connector",
+  "version": "2.4.0",
   "description": "wagmi connector to connect with Magic SDK",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -22,8 +22,9 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@magic-ext/oauth2": "^11.4.1",
-    "magic-sdk": "29.4.2"
+    "@magic-ext/evm": "^1.2.1",
+    "@magic-ext/oauth2": "^15.3.1",
+    "magic-sdk": "^33.4.1"
   },
   "devDependencies": {
     "@changesets/cli": "^2.24.0",
