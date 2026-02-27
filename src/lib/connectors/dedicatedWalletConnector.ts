@@ -71,6 +71,7 @@ export function dedicatedWalletConnector({ chains, options }: DedicatedWalletCon
       isDarkMode: options.isDarkMode,
       customLogo: options.customLogo,
       customHeaderText: options.customHeaderText,
+      customLoginText: options.customLoginText,
       enableSMSLogin: enableSMSLogin,
       enableEmailLogin: enableEmailLogin,
       oauthProviders,

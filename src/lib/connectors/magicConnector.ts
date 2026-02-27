@@ -11,6 +11,7 @@ export interface MagicOptions {
   isDarkMode?: boolean;
   customLogo?: string;
   customHeaderText?: string;
+  customLoginText?: string;
   connectorType?: 'dedicated' | 'universal';
   magicSdkConfiguration?: any;
   networks?: EthNetworkConfiguration[];
