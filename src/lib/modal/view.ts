@@ -19,6 +19,7 @@ import { modalStyles } from './styles';
 export const createModal = async (props: {
   accentColor?: string;
   isDarkMode?: boolean;
+  isCustomModal?: boolean;
   customLogo?: string;
   customHeaderText?: string;
   enableSMSLogin?: boolean;
@@ -132,10 +133,12 @@ export const createModal = async (props: {
 
   // ADD FORM TO BODY
   const overlay = document.createElement('div');
-  overlay.classList.add('Magic__formOverlay');
-  if (props.isDarkMode) overlay.classList.add('Magic__dark');
-  document.body.appendChild(overlay);
-  overlay.innerHTML = modal;
+  if (!props.isCustomModal) {
+    overlay.classList.add('Magic__formOverlay');
+    if (props.isDarkMode) overlay.classList.add('Magic__dark');
+    document.body.appendChild(overlay);
+    overlay.innerHTML = modal;
+  }
   const formBody = document.getElementById('MagicModalBody');
   setTimeout(() => {
     if (formBody) formBody.style.transform = 'translate(-50%, -50%) scale(1)';
@@ -149,7 +152,22 @@ export const createModal = async (props: {
     }, 200);
   };
 
+  const getFormOutput = () => {
+    const field = document.getElementById('MagicFormInput') as HTMLInputElement;
+    if (!field?.checkValidity()) return undefined;
+    const value = field.value;
+    return RegExp(phoneNumberRegex).test(value) ? { phoneNumber: value } : { email: value };
+  };
+
   return new Promise(resolve => {
+    if (props.isCustomModal) {
+      const output = getFormOutput();
+      if (output) {
+        resolve(output);
+        return;
+      }
+    }
+
     // FORM CLOSE BUTTON
     document.getElementById('MagicCloseBtn')?.addEventListener('click', () => {
       removeForm();
@@ -164,19 +182,8 @@ export const createModal = async (props: {
     // EMAIL FORM SUBMIT HANDLER
     document.getElementById('MagicForm')?.addEventListener('submit', e => {
       e.preventDefault();
-      const formInputField = document.getElementById('MagicFormInput') as HTMLInputElement;
-      const isFormValid = formInputField?.checkValidity();
-      if (isFormValid) {
-        let output;
-        if (RegExp(phoneNumberRegex).test(formInputField.value)) {
-          output = {
-            phoneNumber: formInputField?.value,
-          };
-        } else {
-          output = {
-            email: formInputField?.value,
-          };
-        }
+      const output = getFormOutput();
+      if (output) {
         removeForm();
         resolve(output);
       }

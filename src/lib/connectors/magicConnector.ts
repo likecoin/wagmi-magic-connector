@@ -9,6 +9,7 @@ export interface MagicOptions {
   apiKey: string;
   accentColor?: string;
   isDarkMode?: boolean;
+  isCustomModal?: boolean;
   customLogo?: string;
   customHeaderText?: string;
   connectorType?: 'dedicated' | 'universal';

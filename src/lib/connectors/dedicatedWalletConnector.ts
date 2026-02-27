@@ -81,6 +81,7 @@ export function dedicatedWalletConnector({ chains, options }: DedicatedWalletCon
     const output: UserDetails = (await createModal({
       accentColor: options.accentColor,
       isDarkMode: options.isDarkMode,
+      isCustomModal: options.isCustomModal,
       customLogo: options.customLogo,
       customHeaderText: options.customHeaderText,
       enableSMSLogin: enableSMSLogin,
