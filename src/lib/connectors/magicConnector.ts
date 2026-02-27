@@ -39,14 +39,52 @@ export function magicConnector({ chains = [], options }: MagicConnectorParams) {
   const getMagicSDK = async (): Promise<Magic> => {
     if (magicInstance) return magicInstance;
 
-    const [{ Magic: MagicConstructor }, { OAuthExtension }] = await Promise.all([
+    const [{ Magic: MagicConstructor }, { OAuthExtension }, { EVMExtension }] = await Promise.all([
       import('magic-sdk'),
       import('@magic-ext/oauth2'),
+      import('@magic-ext/evm'),
     ]);
+
+    const networkNameMap: Record<string, number> = {
+      mainnet: 1,
+      sepolia: 11155111,
+      goerli: 5,
+    };
+
+    const evmNetworks = options.networks
+      ?.map(n => {
+        if (typeof n === 'object' && 'rpcUrl' in n) {
+          return n as { rpcUrl: string; chainId: number };
+        }
+        if (typeof n === 'object' && 'chainId' in n) {
+          const chain = chains.find(c => c.id === (n as any).chainId);
+          return {
+            rpcUrl: chain?.rpcUrls?.default?.http?.[0] ?? (n as any).rpcUrl ?? '',
+            chainId: (n as any).chainId as number,
+          };
+        }
+        if (typeof n === 'string') {
+          const chainId = networkNameMap[n.toLowerCase()];
+          if (chainId) {
+            const chain = chains.find(c => c.id === chainId);
+            return {
+              rpcUrl: chain?.rpcUrls?.default?.http?.[0] ?? '',
+              chainId,
+            };
+          }
+        }
+        return undefined;
+      })
+      .filter((n): n is { rpcUrl: string; chainId: number } => n !== undefined && n.rpcUrl !== '');
+
+    const extensions: any[] = [new OAuthExtension()];
+    if (evmNetworks && evmNetworks.length > 0) {
+      extensions.push(new EVMExtension(evmNetworks));
+    }
 
     magicInstance = new MagicConstructor(options.apiKey, {
       ...options.magicSdkConfiguration,
-      extensions: [new OAuthExtension()],
+      extensions,
     });
 
     return magicInstance;
