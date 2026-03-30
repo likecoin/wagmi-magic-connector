@@ -82,16 +82,23 @@ export function dedicatedWalletConnector({ chains, options }: DedicatedWalletCon
     return output;
   };
 
-  return createConnector(config => ({
+  let magic: Magic | undefined;
+  let magicPromise: Promise<Magic> | undefined;
+
+  const connectorFn = createConnector(config => ({
     id,
     type,
     name,
-    magic: undefined as Magic | undefined,
     async getMagic(): Promise<Magic> {
-      if (!this.magic) {
-        this.magic = await getMagicSDK();
+      if (!magicPromise) {
+        magicPromise = getMagicSDK()
+          .then(m => (magic = m))
+          .catch(error => {
+            magicPromise = undefined;
+            throw error;
+          });
       }
-      return this.magic;
+      return magicPromise;
     },
     getProvider,
     getAccount,
@@ -244,4 +251,16 @@ export function dedicatedWalletConnector({ chains, options }: DedicatedWalletCon
       config.emitter.emit('disconnect');
     },
   }));
+
+  // Expose `magic` as non-enumerable so wagmi's deepEqual doesn't
+  // traverse the Magic SDK's circular references and blow the stack.
+  return ((...args: Parameters<typeof connectorFn>) => {
+    const connector = connectorFn(...args);
+    Object.defineProperty(connector, 'magic', {
+      get: () => magic,
+      enumerable: false,
+      configurable: true,
+    });
+    return connector;
+  }) as typeof connectorFn;
 }

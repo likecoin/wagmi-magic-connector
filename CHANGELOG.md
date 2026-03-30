@@ -1,5 +1,14 @@
 # @likecoin/wagmi-connector
 
+## 2.4.1-like.0
+
+### Patch Changes
+
+- Merge branch `main` into `likecoin`
+- Fix wagmi `deepEqual` stack overflow caused by Magic SDK circular references in connector object
+- Make `magic` property non-enumerable so `Object.keys()` skips it
+- Cache `getMagic()` promise to prevent duplicate SDK initialization, with retry on transient failures
+
 ## 2.4.0-like.0
 
 ### Minor Changes
