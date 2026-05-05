@@ -37,7 +37,8 @@ export function magicConnector({ chains = [], options }: MagicConnectorParams) {
 
   let magicInstance: Magic | null = null;
 
-  const getMagicSDK = async (): Promise<Magic> => {
+  const getMagicSDK = async (): Promise<Magic | null> => {
+    if (IS_SERVER) return null;
     if (magicInstance) return magicInstance;
 
     const [{ Magic: MagicConstructor }, { OAuthExtension }, { EVMExtension }] = await Promise.all([
@@ -99,16 +100,17 @@ export function magicConnector({ chains = [], options }: MagicConnectorParams) {
 
   const getAccount = async () => {
     const provider = await getProvider();
-    const accounts = await provider?.send('eth_accounts', []);
-    const account = getAddress(accounts[0] as string);
-    return account;
+    if (!provider) throw new Error('Magic provider is not available.');
+    const accounts = (await provider.send('eth_accounts', [])) as string[];
+    if (!accounts?.[0]) throw new Error('No accounts available from Magic provider.');
+    return getAddress(accounts[0]);
   };
 
   const getWalletClient = async ({ chainId }: { chainId?: number } = {}) => {
-    const provider = (await getProvider()) as unknown as EthereumProvider;
+    const provider = (await getProvider()) as EthereumProvider | null;
+    if (!provider) throw new Error('provider is required.');
     const account = await getAccount();
     const chain = chains.find(x => x.id === chainId) ?? chains[0];
-    if (!provider) throw new Error('provider is required.');
     return createWalletClient({
       account,
       chain,

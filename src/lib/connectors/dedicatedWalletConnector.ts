@@ -91,7 +91,11 @@ export function dedicatedWalletConnector({ chains, options }: DedicatedWalletCon
     async getMagic(): Promise<Magic> {
       if (!magicPromise) {
         magicPromise = getMagicSDK()
-          .then(m => (magic = m))
+          .then(m => {
+            if (!m) throw new Error('Magic SDK is not available on the server.');
+            magic = m;
+            return m;
+          })
           .catch(error => {
             magicPromise = undefined;
             throw error;
@@ -103,6 +107,9 @@ export function dedicatedWalletConnector({ chains, options }: DedicatedWalletCon
     getAccount,
     onAccountsChanged,
     async connect() {
+      if (IS_SERVER) {
+        throw new Error('Magic connector cannot connect on the server.');
+      }
       if (!options.apiKey) {
         throw new Error('Magic API Key is not provided.');
       }
@@ -162,6 +169,7 @@ export function dedicatedWalletConnector({ chains, options }: DedicatedWalletCon
     },
 
     async disconnect() {
+      if (IS_SERVER) return;
       try {
         const magic = await this.getMagic();
         await magic?.user.logout();
@@ -174,7 +182,8 @@ export function dedicatedWalletConnector({ chains, options }: DedicatedWalletCon
 
     async getAccounts() {
       const provider = await getProvider();
-      const accounts = (await provider?.send('eth_accounts', [])) as string[];
+      if (!provider) return [];
+      const accounts = (await provider.send('eth_accounts', [])) as string[];
       return accounts.map(x => getAddress(x));
     },
 
