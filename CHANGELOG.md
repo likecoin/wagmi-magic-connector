@@ -1,5 +1,14 @@
 # @likecoin/wagmi-connector
 
+## 2.4.2-like.0
+
+### Patch Changes
+
+- Merge branch `main` into `likecoin`
+- Guard SSR paths so `@magic-ext/oauth2`'s eager `seamlessTelegramLogin` no longer crashes wagmi's reconnect on the server
+- Skip Magic SDK construction on the server and bail cleanly from `connect`/`disconnect`/`getAccounts`
+- Tighten provider null checks in `getAccount` and `getWalletClient`
+
 ## 2.4.1-like.0
 
 ### Patch Changes
