@@ -28,9 +28,19 @@ export const createModal = async (props: {
   oauthProviders?: OAuthProvider[];
 }) => {
   // INJECT FORM STYLES
-  const style = document.createElement('style');
-  style.innerHTML = modalStyles(props.accentColor);
-  document.head.appendChild(style);
+  // Tagged with a data attribute rather than an id: a host page cannot collide
+  // with it, and reusing the node keeps connect() from appending a new <style>
+  // to <head> on every call.
+  const css = modalStyles(props.accentColor);
+  const existingStyle = document.head.querySelector<HTMLStyleElement>('style[data-magic-modal-styles]');
+  if (existingStyle) {
+    existingStyle.textContent = css;
+  } else {
+    const style = document.createElement('style');
+    style.dataset.magicModalStyles = '';
+    style.textContent = css;
+    document.head.appendChild(style);
+  }
 
   // PROVIDERS FOR OAUTH BUTTONS
   const allProviders = [
@@ -154,19 +164,47 @@ export const createModal = async (props: {
   };
 
   const getFormOutput = () => {
-    const field = document.getElementById('MagicFormInput') as HTMLInputElement;
-    if (!field?.checkValidity()) return undefined;
-    const value = field.value;
-    return RegExp(phoneNumberRegex).test(value) ? { phoneNumber: value } : { email: value };
+    // Custom-modal hosts own #MagicFormInput and may render a non-input node.
+    // Throwing here would escape the retry loop below and hang connect() forever.
+    const field = document.getElementById('MagicFormInput');
+    if (!(field instanceof HTMLInputElement) || !field.checkValidity()) return undefined;
+    const value = field.value.trim();
+    if (RegExp(phoneNumberRegex).test(value)) return { phoneNumber: value };
+    // The built-in modal sets type/pattern/required itself, so checkValidity() is
+    // authoritative there and emailRegex would reject addresses the browser accepts.
+    // A host-rendered input carries no constraints, so validate it ourselves —
+    // otherwise checkValidity() passes vacuously and an empty box reads as an email.
+    if (props.isCustomModal && !RegExp(emailRegex).test(value)) return undefined;
+    return { email: value };
   };
 
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     if (props.isCustomModal) {
-      const output = getFormOutput();
-      if (output) {
-        resolve(output);
-        return;
-      }
+      // Custom modal mode renders no fallback UI, so the listeners below have
+      // nothing to attach to; the host must populate #MagicFormInput before
+      // connecting. Poll for a late render, then reject so connect() never hangs.
+      const customModalRetryIntervalMs = 100;
+      const customModalTimeoutMs = 2000;
+      const customModalDeadline = Date.now() + customModalTimeoutMs;
+      const checkFormOutput = () => {
+        const output = getFormOutput();
+        if (output) {
+          resolve(output);
+          return;
+        }
+        if (Date.now() >= customModalDeadline) {
+          reject(
+            new Error(
+              'Magic custom modal: expected <input id="MagicFormInput"> to hold a valid email or ' +
+                'international phone number (e.g. +11234567890) before connect() is called',
+            ),
+          );
+          return;
+        }
+        setTimeout(checkFormOutput, customModalRetryIntervalMs);
+      };
+      checkFormOutput();
+      return;
     }
 
     // FORM CLOSE BUTTON
