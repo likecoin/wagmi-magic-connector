@@ -1,5 +1,14 @@
 # @likecoin/wagmi-connector
 
+## 2.4.2-like.1
+
+### Patch Changes
+
+- Reject instead of hanging when a custom modal never supplies a valid `#MagicFormInput` value, polling briefly for a late render before failing `connect()`
+- Validate the host-supplied `#MagicFormInput` value in custom modal mode, so an unconstrained or empty input no longer resolves as an empty email
+- Guard against `#MagicFormInput` not being an `<input>`, which previously threw inside the retry loop and left `connect()` pending forever
+- Reuse the injected `<style>` element instead of appending a new one to `<head>` on every `connect()`
+
 ## 2.4.2-like.0
 
 ### Patch Changes
